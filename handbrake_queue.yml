@@ -1,0 +1,72 @@
+- name: Transcode queue with HandBrakeCLI
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  any_errors_fatal: true
+  serial: 1
+
+  vars_files:
+    - ./jobs.yml
+
+  tasks:
+    - name: Ensure destination directory exists
+      file:
+        path: "{{ item.dest | dirname }}"
+        state: directory
+      loop: "{{ handbrake.jobs }}"
+
+    # - name: Transcode with HandBrakeCLI (skips if output exists)
+    #   command:
+    #     argv:
+    #       - "{{ handbrake.binary }}"
+    #       - "--preset-import-file"
+    #       - "{{ handbrake.preset_file }}"
+    #       - "-i"
+    #       - "{{ item.src }}"
+    #       - "-o"
+    #       - "{{ item.dest }}"
+    #       - "--preset"
+    #       - "{{ handbrake.preset_name }}"
+    #       # {% if handbrake.extra_args is defined %}
+    #       # {% for a in handbrake.extra_args %}- "{{ a }}"{% endfor %}
+    #       # {% endif %}
+    #   args:
+    #     creates: "{{ item.dest }}"
+    #   loop: "{{ handbrake.jobs }}"
+
+    # - name: Transcode with HandBrakeCLI (live output)
+    #   ansible.builtin.shell: >
+    #     "{{ handbrake.binary }}"
+    #     --preset-import-file "{{ handbrake.preset_file }}"
+    #     -i "{{ item.src }}"
+    #     -o "{{ item.dest }}"
+    #     --preset "{{ handbrake.preset_name }}"
+    #   args:
+    #     chdir: "{{ handbrake.workdir | default(omit) }}"
+    #     creates: "{{ item.dest }}"
+    #   loop: "{{ handbrake.jobs }}"
+
+    # - name: Transcode with HandBrakeCLI (log + tee)
+    #   ansible.builtin.shell: >
+    #     "{{ handbrake.binary }}"
+    #     --preset-import-file "{{ handbrake.preset_file }}"
+    #     -i "{{ item.src }}"
+    #     -o "{{ item.dest }}"
+    #     --preset "{{ handbrake.preset_name }}"
+    #     {% if handbrake.extra_args is defined %}{{ handbrake.extra_args | join(' ') }}{% endif %}
+    #     2>&1 | tee -a "{{ handbrake.log_dir | default('~/handbrake-logs') | expanduser }}/{{ (item.dest | basename) }}.log"
+    #   args:
+    #     creates: "{{ item.dest }}"
+    #   loop: "{{ handbrake.jobs }}"
+
+    - name: Transcode with HandBrakeCLI (log + tee)
+      ansible.builtin.shell: >
+        "{{ handbrake.binary }}"
+        --preset-import-file "{{ handbrake.preset_file }}"
+        -i "{{ item.src }}"
+        -o "{{ item.dest }}"
+        --preset "{{ handbrake.preset_name }}"
+        2>&1 | tee -a "{{ handbrake.log_dir | default('./handbrake-logs') | expanduser }}/{{ (item.dest | basename) }}.log"
+      args:
+        creates: "{{ item.dest }}"
+      loop: "{{ handbrake.jobs }}"

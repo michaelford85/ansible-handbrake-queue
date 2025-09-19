@@ -1,0 +1,25 @@
+handbrake:
+  # Full path is safest on macOS
+  binary: "/opt/homebrew/bin/HandbrakeCLI"
+
+  # Either your exported preset JSON or your UserPresets.json
+  preset_file: "./bluray_and_dvd.json"
+
+  # Exact preset name as listed by `HandBrakeCLI --preset-list`
+  preset_name: "Blu Ray and DVD"
+
+  log_dir: "./handbrake-logs"
+
+  # Optional: pass any extra CLI flags (each as a separate list item)
+  # extra_args:
+  #   - "--encoder-preset"
+  #   - "slow"
+  #   - "--markers"
+
+  jobs:
+    - src: "/Volumes/Crucial X9/Jellyfin Working Directory/raw media/movies/The Accountant/The Accountant (2016).mkv"
+      dest: "/Volumes/Crucial X9/Jellyfin Working Directory/transcoded media/The Accountant (2016) [tmdbid-302946]/The Accountant (2016).mkv"
+
+    # Add more jobs as needed:
+    # - src: "/path/to/input2.mkv"
+    #   dest: "/path/to/output2.mkv"
