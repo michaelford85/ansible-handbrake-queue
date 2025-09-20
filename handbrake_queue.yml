@@ -6,67 +6,50 @@
   serial: 1
 
   vars_files:
-    - ./jobs.yml
+    - "{{ playbook_dir }}/jobs.yml"
 
   tasks:
+    - name: Ensure log directory exists
+      ansible.builtin.file:
+        path: "{{ handbrake.log_dir | default(playbook_dir ~ '/handbrake-logs') }}"
+        state: directory
+
     - name: Ensure destination directory exists
-      file:
+      ansible.builtin.file:
         path: "{{ item.dest | dirname }}"
         state: directory
       loop: "{{ handbrake.jobs }}"
 
-    # - name: Transcode with HandBrakeCLI (skips if output exists)
-    #   command:
-    #     argv:
-    #       - "{{ handbrake.binary }}"
-    #       - "--preset-import-file"
-    #       - "{{ handbrake.preset_file }}"
-    #       - "-i"
-    #       - "{{ item.src }}"
-    #       - "-o"
-    #       - "{{ item.dest }}"
-    #       - "--preset"
-    #       - "{{ handbrake.preset_name }}"
-    #       # {% if handbrake.extra_args is defined %}
-    #       # {% for a in handbrake.extra_args %}- "{{ a }}"{% endfor %}
-    #       # {% endif %}
-    #   args:
-    #     creates: "{{ item.dest }}"
-    #   loop: "{{ handbrake.jobs }}"
-
-    # - name: Transcode with HandBrakeCLI (live output)
-    #   ansible.builtin.shell: >
-    #     "{{ handbrake.binary }}"
-    #     --preset-import-file "{{ handbrake.preset_file }}"
-    #     -i "{{ item.src }}"
-    #     -o "{{ item.dest }}"
-    #     --preset "{{ handbrake.preset_name }}"
-    #   args:
-    #     chdir: "{{ handbrake.workdir | default(omit) }}"
-    #     creates: "{{ item.dest }}"
-    #   loop: "{{ handbrake.jobs }}"
-
-    # - name: Transcode with HandBrakeCLI (log + tee)
-    #   ansible.builtin.shell: >
-    #     "{{ handbrake.binary }}"
-    #     --preset-import-file "{{ handbrake.preset_file }}"
-    #     -i "{{ item.src }}"
-    #     -o "{{ item.dest }}"
-    #     --preset "{{ handbrake.preset_name }}"
-    #     {% if handbrake.extra_args is defined %}{{ handbrake.extra_args | join(' ') }}{% endif %}
-    #     2>&1 | tee -a "{{ handbrake.log_dir | default('~/handbrake-logs') | expanduser }}/{{ (item.dest | basename) }}.log"
-    #   args:
-    #     creates: "{{ item.dest }}"
-    #   loop: "{{ handbrake.jobs }}"
-
-    - name: Transcode with HandBrakeCLI (log + tee)
+    - name: Transcode with HandBrakeCLI (logs via tee; subtitle shorthand supported)
       ansible.builtin.shell: >
         "{{ handbrake.binary }}"
         --preset-import-file "{{ handbrake.preset_file }}"
         -i "{{ item.src }}"
         -o "{{ item.dest }}"
         --preset "{{ handbrake.preset_name }}"
-        2>&1 | tee -a "{{ handbrake.log_dir | default('./handbrake-logs') | expanduser }}/{{ (item.dest | basename) }}.log"
+        {% if handbrake.extra_args is defined %}{{ handbrake.extra_args | join(' ') }}{% endif %}
+
+        {# --- Subtitle shorthand expansion --- #}
+        {# include by language list (if provided) #}
+        {% if item.subtitle_lang_list is defined %}
+        --subtitle-lang-list {{ item.subtitle_lang_list | join(',') if item.subtitle_lang_list is iterable else item.subtitle_lang_list }}
+        {% endif %}
+
+        {# include explicit track number (if provided) #}
+        {% if item.subtitle_track is defined %}
+        --subtitle {{ item.subtitle_track }}
+          {% if item.subtitle_burn | default(false) %}
+        --subtitle-burned={{ item.subtitle_track }}
+          {% endif %}
+          {% if item.subtitle_default | default(false) %}
+        --subtitle-default={{ item.subtitle_track }}
+          {% endif %}
+        {% endif %}
+
+        {# still allow raw per-job extra_args if you want to override/add #}
+        {% if item.extra_args is defined %}{{ item.extra_args | join(' ') }}{% endif %}
+
+        2>&1 | tee -a "{{ handbrake.log_dir | default('./handbrake-logs') }}/{{ (item.dest | basename) }}.log"
       args:
         creates: "{{ item.dest }}"
       loop: "{{ handbrake.jobs }}"

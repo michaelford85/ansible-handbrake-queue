@@ -1,25 +1,32 @@
 handbrake:
-  # Full path is safest on macOS
-  binary: "/opt/homebrew/bin/HandbrakeCLI"
-
-  # Either your exported preset JSON or your UserPresets.json
-  preset_file: "./bluray_and_dvd.json"
-
-  # Exact preset name as listed by `HandBrakeCLI --preset-list`
+  binary: "/opt/homebrew/bin/HandBrakeCLI"
+  preset_file: "{{ playbook_dir }}/presets/bluray_and_dvd.json"
   preset_name: "Blu Ray and DVD"
+  log_dir: "{{ playbook_dir }}/handbrake-logs"
 
-  log_dir: "./handbrake-logs"
-
-  # Optional: pass any extra CLI flags (each as a separate list item)
+  # Optional: global flags for ALL jobs
   # extra_args:
-  #   - "--encoder-preset"
-  #   - "slow"
   #   - "--markers"
 
   jobs:
-    - src: "/Volumes/Crucial X9/Jellyfin Working Directory/raw media/movies/The Accountant/The Accountant (2016).mkv"
-      dest: "/Volumes/Crucial X9/Jellyfin Working Directory/transcoded media/The Accountant (2016) [tmdbid-302946]/The Accountant (2016).mkv"
+    # No special subtitles
+    - src: "/media/raw/MovieA.mkv"
+      dest: "/media/transcoded/MovieA.mkv"
 
-    # Add more jobs as needed:
-    # - src: "/path/to/input2.mkv"
-    #   dest: "/path/to/output2.mkv"
+    # Chinese subs on track 2; make default (don’t burn)
+    - src: "/media/raw/MovieB.mkv"
+      dest: "/media/transcoded/MovieB.mkv"
+      subtitle_track: 2
+      subtitle_default: true
+
+    # Russian subs on track 4; burn in (and set default)
+    - src: "/media/raw/MovieC.mkv"
+      dest: "/media/transcoded/MovieC.mkv"
+      subtitle_track: 4
+      subtitle_burn: true
+      subtitle_default: true
+
+    # Language-based include example (no specific track numbers)
+    - src: "/media/raw/MovieD.mkv"
+      dest: "/media/transcoded/MovieD.mkv"
+      subtitle_lang_list: ["eng","spa"]   # or "eng,spa"
