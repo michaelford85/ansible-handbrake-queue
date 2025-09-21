@@ -10,8 +10,11 @@ handbrake:
 
   jobs:
     # No special subtitles
-    - src: "/media/raw/MovieA.mkv"
-      dest: "/media/transcoded/MovieA.mkv"
+    - src: "/Volumes/SanDisk 2TB/Jellyfin Working Directory/raw media/movies/Rush Hour/Rush Hour (1998).mkv"
+      dest: "/Volumes/SanDisk 2TB/Jellyfin Working Directory//transcoded media/Rush Hour (1998) [tmdbid-2109]/Rush Hour (1998).mkv"
+    
+    - src: "/Volumes/Crucial X9/Jellyfin Working Directory/raw media/movies/Raiders of the Lost Ark/Raiders of the Lost Ark (1981).mkv"
+      dest: "/Volumes/Crucial X9/Jellyfin Working Directory/transcoded media/Raiders of the Lost Ark (1981) [tmdbid-85]/Raiders of the Lost Ark (1981).mkv"
 
     # Chinese subs on track 2; make default (don’t burn)
     - src: "/media/raw/MovieB.mkv"
